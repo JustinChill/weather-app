@@ -1,10 +1,11 @@
-/** @type {import('tailwindcss').Config} */
-export default {
+module.exports = {
   content: [
+    './**/*.{php,html}',
     './client/**/*.{html,js}',
-    './client/**/*.{html,js}',
-    "./client/**/*.{js,ts,jsx,tsx}",
-    "./client/**/*.{js,ts,jsx,tsx}",
+    './client/**/*.{html,js,ts,jsx,tsx}',
+    "./index.html",
+    "./src/**/*.{vue,js,ts,jsx,tsx}",
+    "./**/*.{js,ts,jsx,tsx}",
     "./client/index.html",
     "./client/**/*.{html,js,ts,jsx,tsx}",
   ],
