@@ -1,9 +1,7 @@
 import { Router } from "express";
 const router = Router();
-//internall
 import HistoryService from "../../service/historyService.js";
 import WeatherService from "../../service/weatherService.js";
-// POST Request with city name to retrieve weather data
 router.post('/', async (req, res) => {
     try {
         const cityName = req.body.cityName;
@@ -15,14 +13,13 @@ router.post('/', async (req, res) => {
             return res.status(404).json({ msg: `City "${cityName}" not found.` });
         }
         await HistoryService.addCity(cityName);
-        return res.json(data); // Explicitly return the JSON response
+        return res.json(data);
     }
     catch (error) {
         console.error(error);
         return res.status(500).json({ msg: "An error occurred while fetching weather data." });
     }
 });
-// GET search history
 router.get("/history", async (__req, res) => {
     try {
         const savedCity = await HistoryService.getCities();
@@ -33,7 +30,7 @@ router.get("/history", async (__req, res) => {
         res.status(500).json(err);
     }
 });
-// * BONUS DELETE city from search history
+// BONUS
 router.delete("/history/:id", async (req, res) => {
     try {
         if (!req.params.id) {

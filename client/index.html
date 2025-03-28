@@ -31,14 +31,14 @@
   </header>
 
   <!-- max-width for ultra wide resolutions -->
-  <div class="container mx-auto px-4 max-w-7xl">
-    <div class="flex flex-wrap -mx-4">
+  <div class="container mx-auto px-4 max-w-7xl h-auto">
+    <div class="flex flex-wrap -mx-4 h-auto">
       <aside class="w-full lg:w-1/4 px-4 pb-4">
         <h2 class="text-xl font-semibold mt-4">Search for a City:</h2>
         <form id="search-form" class="mt-4">
           <div class="flex">
             <input class="flex-grow px-4 py-2 border rounded-l focus:outline-none focus:ring-2 focus:ring-blue-500" type="text" id="search-input" placeholder="San Diego"  />
-            <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-r hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button type="submit" class="ml-2 px-4 py-2 bg-blue-500 text-white rounded-r hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
               Search
             </button>
           </div>
@@ -47,9 +47,9 @@
         <div class="mt-4" id="history"></div>
       </aside>
 
-      <div class="w-full lg:w-3/4 px-4 pb-4">
-        <section class="mt-4" role="region" aria-live="polite">
-          <div class="bg-white shadow-md rounded-lg p-6">
+      <div class="w-full lg:w-3/4 px-4 pb-4 h-auto">
+        <section class="mt-4 h-auto">
+          <div class="bg-white shadow-md rounded-lg p-6 h-auto">
             <h2 class="text-2xl font-bold" id="search-title">
               Search for a city!
               <img id="weather-img" class="inline-block ml-2" />
@@ -59,7 +59,7 @@
             <p class="mt-2" id="humidity">Humidity: %</p>
           </div>
         </section>
-        <section id="forecast" class="mt-4" role="region" aria-live="polite"></section>
+        <section id="forecast" class="mt-4 bg-white shadow-md rounded-lg p-6 h-auto grid" role="region" aria-live="polite"></section>
       </div>
     </div>
   </div>

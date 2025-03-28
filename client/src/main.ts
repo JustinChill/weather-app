@@ -119,12 +119,12 @@ const createForecastCard = () => {
   cardBody.append(cardTitle, weatherIcon, tempEl, windEl, humidityEl);
 
   col.classList.add('col-auto');
-  card.classList.add('forecast-card', 'card', 'text-white', 'bg-primary', 'h-100');
+  card.classList.add('forecast-card', 'card', 'text-white', 'bg-primary', 'grid');
   cardBody.classList.add('card-body', 'p-2');
   cardTitle.classList.add('card-title');
-  tempEl.classList.add('card-text');
-  windEl.classList.add('card-text');
-  humidityEl.classList.add('card-text');
+  tempEl.classList.add('card-text', 'text-base');
+  windEl.classList.add('card-text', 'text-base');
+  humidityEl.classList.add('card-text', 'text-base');
 
   return { col, cardTitle, weatherIcon, tempEl, windEl, humidityEl };
 };
@@ -141,7 +141,7 @@ const createHistoryButton = (city: string) => {
 const createDeleteButton = () => {
   const delBtnEl = document.createElement('button');
   delBtnEl.setAttribute('type', 'button');
-  delBtnEl.classList.add('fas', 'fa-trash-alt', 'delete-city', 'btn', 'btn-danger', 'col-2');
+  delBtnEl.classList.add('fas', 'fa-trash-alt', 'delete-city', 'btn', 'btn-danger', 'col-2', 'ml-2');
   delBtnEl.addEventListener('click', handleDeleteHistoryClick);
   return delBtnEl;
 };
