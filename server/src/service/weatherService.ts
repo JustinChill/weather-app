@@ -9,14 +9,28 @@ interface Coordinates {
 }
 
 class Weather {
+  city: string;
+  date: Dayjs | string;
+  tempF: number;
+  windSpeed: number;
+  humidity: number;
+  icon: string;
+
   constructor(
-    public city: string,
-    public date: Dayjs | string,
-    public tempF: number,
-    public windSpeed: number,
-    public humidity: number,
-    public icon: string
-  ) {}
+    city: string,
+    date: Dayjs | string,
+    tempF: number,
+    windSpeed: number,
+    humidity: number,
+    icon: string
+  ) {
+    this.city = city;
+    this.date = date;
+    this.tempF = tempF;
+    this.windSpeed = windSpeed;
+    this.humidity = humidity;
+    this.icon = icon;
+  }
 }
 
 class WeatherService {
@@ -31,14 +45,24 @@ class WeatherService {
   }
 
   private async fetchLocationData(query: string): Promise<Coordinates> {
-    if (!this.baseURL || !this.apiKey) {
-      throw new Error("API key or base URL not found.");
+    try {
+      if (!this.baseURL || !this.apiKey) {
+        throw new Error("API key or base URL not found.");
+      }
+      const response: Coordinates[] = await fetch(query).then((res) => res.json());
+      return response[0];
+    } catch (error) {
+      console.error(error);
+      throw error;
     }
-    const response: Coordinates[] = await fetch(query).then((res) => res.json());
-    if (!response.length) {
+  }
+
+  private destructureLocationData(locationData: Coordinates): Coordinates {
+    if (!locationData) {
       throw new Error("Location not found. Please enter a valid city name.");
     }
-    return response[0];
+    const { lat, lon } = locationData;
+    return { lat, lon };
   }
 
   private buildGeocodeQuery(): string {
@@ -49,13 +73,23 @@ class WeatherService {
     return `${this.baseURL}/data/2.5/forecast?lat=${coordinates.lat}&lon=${coordinates.lon}&appid=${this.apiKey}&units=imperial`;
   }
 
+  private async fetchAndDestructureLocationData(): Promise<Coordinates> {
+    const data = await this.fetchLocationData(this.buildGeocodeQuery());
+    return this.destructureLocationData(data);
+  }
+
   private async fetchWeatherData(coordinates: Coordinates): Promise<Weather[]> {
-    const response = await fetch(this.buildWeatherQuery(coordinates)).then((res) => res.json());
-    if (!response.list.length) {
-      throw new Error("Weather data not found");
+    try {
+      const response = await fetch(this.buildWeatherQuery(coordinates)).then((res) => res.json());
+      if (!response) {
+        throw new Error("Weather data not found");
+      }
+      const currentWeather = this.parseCurrentWeather(response.list[0]);
+      return this.buildForecastArray(currentWeather, response.list);
+    } catch (error) {
+      console.error(error);
+      throw error;
     }
-    const currentWeather = this.parseCurrentWeather(response.list[0]);
-    return this.buildForecastArray(currentWeather, response.list);
   }
 
   private parseCurrentWeather(response: any): Weather {
@@ -89,9 +123,14 @@ class WeatherService {
   }
 
   async getWeatherForCity(city: string): Promise<Weather[]> {
-    this.cityName = city;
-    const coordinates = await this.fetchLocationData(this.buildGeocodeQuery());
-    return await this.fetchWeatherData(coordinates);
+    try {
+      this.cityName = city;
+      const coordinates = await this.fetchAndDestructureLocationData();
+      return await this.fetchWeatherData(coordinates);
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
   }
 }
 
