@@ -1,5 +1,6 @@
 import { Router } from "express";
 const router = Router();
+//internall
 import HistoryService from "../../service/historyService.js";
 import WeatherService from "../../service/weatherService.js";
 // POST Request with city name to retrieve weather data
