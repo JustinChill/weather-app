@@ -1,7 +1,9 @@
-## Weather Dashboard
+## 🌦 Weather Application Using HTML, CSS, JavaScript, and API
 
-## Description
-The Weather Dashboard is a web application that calls the OpenWeather API and renders data in the browser.
+##  📄 Description
+The Weather Dashboard is a simple weather application that shows real-time weather data for any city using HTML, CSS, JavaScript, and the OpenWeatherMap API. It displays temperature, weather conditions, humidity, and wind speed, with error handling for invalid city names.
+
+Built using HTML, CSS, JavaScript, and the OpenWeatherMap API, the app shows temperature, weather conditions, humidity, and wind speed. It also includes error handling to display a message and icon if an invalid city is entered.
 
 ## Usage
 1.	Open the application in your browser.
