@@ -23,7 +23,7 @@ class WeatherService {
         }
         const response = await fetch(query).then((res) => res.json());
         if (!response.length) {
-            throw new Error("Location not found. Please enter a valid city name.");
+            throw new Error("Sorry, location not found. Please enter a valid city name.");
         }
         return response[0];
     }

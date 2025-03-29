@@ -11,7 +11,7 @@ class City {
 class HistoryService {
     // Method to read from the db.json file
     async read() {
-        return await fs.readFile('db/db.json', {
+        return await fs.readFile('./db/db.json', {
             flag: 'a+',
             encoding: 'utf8',
         });
