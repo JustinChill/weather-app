@@ -2,35 +2,28 @@ import fs from 'node:fs/promises';
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
 
-const DB_PATH = path.resolve(__dirname, 'db/db.json');
+const DB_PATH = path.resolve('db/db.json');
 
-// Define a City class with name and id properties
 class City {
-  name: string;
-  id: string;
-
-  constructor(name: string, id: string) {
-    this.name = name;
-    this.id = id;
-  }
+  constructor(public name: string, public id: string) {}
 }
 
 class HistoryService {
-  // Read JSON file, handling errors gracefully
+  // Read JSON file, handling missing file errors
   private async read(): Promise<City[]> {
     try {
       const data = await fs.readFile(DB_PATH, 'utf8');
       return data ? JSON.parse(data) : [];
     } catch (error: any) {
       if (error.code === 'ENOENT') {
-        return []; // Return an empty array if file doesn't exist
+        return []; // If file doesn't exist, return empty array
       }
       console.error('Error reading the file:', error);
       throw error;
     }
   }
 
-  // Write updated data back to the file
+  // Write data to JSON file
   private async write(cities: City[]): Promise<void> {
     try {
       await fs.writeFile(DB_PATH, JSON.stringify(cities, null, 2));
@@ -40,25 +33,28 @@ class HistoryService {
     }
   }
 
-  // Retrieve stored cities
+  // Get all cities from the database
   async getCities(): Promise<City[]> {
     return this.read();
   }
 
-  // Add a city if it doesn't already exist
+  // Add a city if it does not already exist
   async addCity(cityName: string): Promise<City> {
     if (!cityName.trim()) {
       throw new Error('City cannot be empty');
     }
 
     const cities = await this.getCities();
-    if (cities.some((city) => city.name.toLowerCase() === cityName.toLowerCase())) {
-      return cities.find((city) => city.name.toLowerCase() === cityName.toLowerCase())!;
+    const normalizedCityName = cityName.toLowerCase();
+
+    if (cities.some((city) => city.name.toLowerCase() === normalizedCityName)) {
+      return cities.find((city) => city.name.toLowerCase() === normalizedCityName)!;
     }
 
     const newCity = new City(cityName, uuidv4());
     const updatedCities = [...cities, newCity];
     await this.write(updatedCities);
+
     return newCity;
   }
 
@@ -66,7 +62,7 @@ class HistoryService {
   async removeCity(id: string): Promise<boolean> {
     const cities = await this.getCities();
     const filteredCities = cities.filter((city) => city.id !== id);
-    
+
     if (filteredCities.length === cities.length) {
       return false; // No city was removed
     }
