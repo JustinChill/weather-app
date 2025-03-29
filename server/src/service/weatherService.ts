@@ -42,7 +42,7 @@ class WeatherService {
   }
 
   private buildGeocodeQuery(): string {
-    return `${this.baseURL}/geo/1.0/direct?q=${this.cityName}&appid=${this.apiKey}`;
+    return `${this.baseURL}/geo/1.0/direct?q=${encodeURIComponent(this.cityName)}&appid=${this.apiKey}`;
   }
 
   private buildWeatherQuery(coordinates: Coordinates): string {

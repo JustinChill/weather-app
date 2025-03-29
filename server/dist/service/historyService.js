@@ -1,57 +1,58 @@
 import fs from 'node:fs/promises';
 import { v4 as uuidv4 } from 'uuid';
+// Define a City class with name and id properties
 class City {
     constructor(name, id) {
         this.name = name;
         this.id = id;
     }
 }
+// Complete the HistoryService class
 class HistoryService {
-    constructor() {
-        this.filePath = 'db/db.json';
+    // Method to read from the db.json file
+    async read() {
+        return await fs.readFile('db/db.json', {
+            flag: 'a+',
+            encoding: 'utf8',
+        });
     }
-    async readFile() {
-        try {
-            return await fs.readFile(this.filePath, { encoding: 'utf8' });
-        }
-        catch (error) {
-            if (error.code === 'ENOENT') {
-                // File does not exist, return an empty string
-                return '[]';
-            }
-            throw error;
-        }
+    // Method to write the updated cities array to the searchHistory.json file
+    async write(cities) {
+        return await fs.writeFile('db/db.json', JSON.stringify(cities));
     }
-    async writeFile(cities) {
-        await fs.writeFile(this.filePath, JSON.stringify(cities, null, 2));
-    }
+    // Method to get cities from the db.json file and return them as an array of City objects
     async getCities() {
-        const data = await this.readFile();
-        try {
-            return JSON.parse(data);
-        }
-        catch (error) {
-            return [];
-        }
+        return await this.read().then((cities) => {
+            let parsedCities;
+            // If cities isn't an array or can't be turned into one, send back a new empty array
+            try {
+                parsedCities = [].concat(JSON.parse(cities));
+            }
+            catch (err) {
+                parsedCities = [];
+            }
+            return parsedCities;
+        });
     }
-    async addCity(cityName) {
-        if (!cityName) {
-            throw new Error('City name cannot be empty');
+    // Method to add a city to the db.json file
+    async addCity(city) {
+        if (!city) {
+            throw new Error('City cannot be empty');
         }
-        const cities = await this.getCities();
-        const existingCity = cities.find(city => city.name === cityName);
-        if (existingCity) {
-            return existingCity;
-        }
-        const newCity = new City(cityName, uuidv4());
-        const updatedCities = [...cities, newCity];
-        await this.writeFile(updatedCities);
-        return newCity;
+        const newCity = { name: city, id: uuidv4() };
+        return await this.getCities()
+            .then((cities) => {
+            if (cities.find((index) => index.name === city)) {
+                return cities;
+            }
+            return [...cities, newCity];
+        })
+            .then((updatedCitites) => this.write(updatedCitites))
+            .then(() => newCity);
     }
+    // BONUS: Method to remove a city from the db.json file by id
     async removeCity(id) {
-        const cities = await this.getCities();
-        const filteredCities = cities.filter(city => city.id !== id);
-        await this.writeFile(filteredCities);
+        return await this.getCities().then((cities) => cities.filter((city) => city.id !== id)).then((filteredCities) => this.write(filteredCities));
     }
 }
 export default new HistoryService();

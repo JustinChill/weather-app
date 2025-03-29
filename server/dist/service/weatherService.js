@@ -28,7 +28,7 @@ class WeatherService {
         return response[0];
     }
     buildGeocodeQuery() {
-        return `${this.baseURL}/geo/1.0/direct?q=${this.cityName}&appid=${this.apiKey}`;
+        return `${this.baseURL}/geo/1.0/direct?q=${encodeURIComponent(this.cityName)}&appid=${this.apiKey}`;
     }
     buildWeatherQuery(coordinates) {
         return `${this.baseURL}/data/2.5/forecast?lat=${coordinates.lat}&lon=${coordinates.lon}&appid=${this.apiKey}&units=imperial`;
