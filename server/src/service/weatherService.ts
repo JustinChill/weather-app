@@ -1,10 +1,28 @@
 import dayjs, { Dayjs } from "dayjs";
 import dotenv from "dotenv";
+import fetch from "node-fetch"; // Required for Node.js versions below 18
 dotenv.config();
 
 interface Coordinates {
   lat: number;
   lon: number;
+}
+
+interface WeatherApiResponse {
+  list: {
+    dt: number;
+    dt_txt: string;
+    main: {
+      temp: number;
+      humidity: number;
+    };
+    wind: {
+      speed: number;
+    };
+    weather: {
+      icon: string;
+    }[];
+  }[];
 }
 
 class Weather {
@@ -21,76 +39,71 @@ class Weather {
 class WeatherService {
   private baseURL: string;
   private apiKey: string;
-  private cityName: string;
 
   constructor() {
     this.baseURL = process.env.API_BASE_URL || "";
     this.apiKey = process.env.API_KEY || "";
-    this.cityName = "";
+    if (!this.baseURL || !this.apiKey) {
+      throw new Error("API base URL or API key is missing. Check your .env file.");
+    }
   }
 
-  private async fetchLocationData(query: string): Promise<Coordinates> {
-    if (!this.baseURL || !this.apiKey) {
-      throw new Error("API key or base URL not found.");
+  private async fetchJSON<T>(url: string): Promise<T> {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+      }
+      return (await response.json()) as T;
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      throw new Error("Failed to fetch data from the API.");
     }
-    const response: Coordinates[] = await fetch(query).then((res) => res.json());
+  }
+
+  private async getCoordinates(city: string): Promise<Coordinates> {
+    const url = `${this.baseURL}/geo/1.0/direct?q=${encodeURIComponent(city)}&appid=${this.apiKey}`;
+    const response = await this.fetchJSON<Coordinates[]>(url);
     if (!response.length) {
-      throw new Error("Sorry, location not found. Please enter a valid city name.");
+      throw new Error(`Location "${city}" not found.`);
     }
     return response[0];
   }
 
-  private buildGeocodeQuery(): string {
-    return `${this.baseURL}/geo/1.0/direct?q=${encodeURIComponent(this.cityName)}&appid=${this.apiKey}`;
+  private async getWeatherData(coordinates: Coordinates): Promise<WeatherApiResponse> {
+    const url = `${this.baseURL}/data/2.5/forecast?lat=${coordinates.lat}&lon=${coordinates.lon}&appid=${this.apiKey}&units=imperial`;
+    return this.fetchJSON<WeatherApiResponse>(url);
   }
 
-  private buildWeatherQuery(coordinates: Coordinates): string {
-    return `${this.baseURL}/data/2.5/forecast?lat=${coordinates.lat}&lon=${coordinates.lon}&appid=${this.apiKey}&units=imperial`;
-  }
-
-  private async fetchWeatherData(coordinates: Coordinates): Promise<Weather[]> {
-    const response = await fetch(this.buildWeatherQuery(coordinates)).then((res) => res.json());
-    if (!response.list.length) {
-      throw new Error("Weather data not found");
+  private parseWeather(data: WeatherApiResponse, city: string): Weather[] {
+    if (!data.list.length) {
+      throw new Error("Weather data not found.");
     }
-    const currentWeather = this.parseCurrentWeather(response.list[0]);
-    return this.buildForecastArray(currentWeather, response.list);
-  }
 
-  private parseCurrentWeather(response: any): Weather {
-    const parsedDate = dayjs.unix(response.dt).format("M/D/YYYY");
-    return new Weather(
-      this.cityName,
-      parsedDate,
-      response.main.temp,
-      response.wind.speed,
-      response.main.humidity,
-      response.weather[0].icon
-    );
-  }
-
-  private buildForecastArray(currentWeather: Weather, weatherData: any[]): Weather[] {
-    const weatherForecast: Weather[] = [currentWeather];
-    const filteredWeatherData = weatherData.filter((data) => data.dt_txt.includes("12:00:00"));
-    for (const day of filteredWeatherData) {
-      weatherForecast.push(
-        new Weather(
-          this.cityName,
-          dayjs.unix(day.dt).format("M/D/YYYY"),
-          day.main.temp,
-          day.wind.speed,
-          day.main.humidity,
-          day.weather[0].icon
-        )
-      );
+    const weatherForecast: Weather[] = [];
+    
+    for (const entry of data.list) {
+      if (entry.dt_txt.includes("12:00:00") || weatherForecast.length === 0) {
+        weatherForecast.push(
+          new Weather(
+            city,
+            dayjs.unix(entry.dt).format("M/D/YYYY"),
+            entry.main.temp,
+            entry.wind.speed,
+            entry.main.humidity,
+            entry.weather[0].icon
+          )
+        );
+      }
     }
+
     return weatherForecast;
   }
 
   async getWeatherForCity(city: string): Promise<Weather[]> {
-    this.cityName = city;
-    const coordinates = await this.fetchLocationData(this.buildGeocodeQuery());
-    return await this.fetchWeatherData(coordinates);
+    const coordinates = await this.getCoordinates(city);
+    const weatherData = await this.getWeatherData(coordinates);
+    return this.parseWeather(weatherData, city);
   }
 }
 
