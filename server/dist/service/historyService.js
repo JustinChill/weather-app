@@ -1,7 +1,11 @@
 import fs from 'node:fs/promises';
 import { v4 as uuidv4 } from 'uuid';
+import { fileURLToPath } from 'url';
 import path from 'path';
-const DB_PATH = path.resolve('db/db.json');
+// Manually define __dirname for ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const DB_PATH = path.resolve(__dirname, '../../db/db.json');
 class City {
     constructor(name, id) {
         this.name = name;
@@ -17,7 +21,7 @@ class HistoryService {
         }
         catch (error) {
             if (error.code === 'ENOENT') {
-                return []; // If file doesn't exist, return empty array
+                return []; // If file doesn't exist, return an empty array
             }
             console.error('Error reading the file:', error);
             throw error;
@@ -33,7 +37,6 @@ class HistoryService {
             throw error;
         }
     }
-    // Get all cities from the database
     async getCities() {
         return this.read();
     }
