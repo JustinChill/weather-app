@@ -15,7 +15,8 @@ class Weather {
     public tempF: number,
     public windSpeed: number,
     public humidity: number,
-    public icon: string
+    public icon: string,
+    public iconDescription: string
   ) {}
 }
 
@@ -117,7 +118,8 @@ class WeatherService {
       response.main.temp,
       response.wind.speed,
       response.main.humidity,
-      response.weather[0].icon
+      response.weather[0].icon,
+      response.weather[0].description
     );
   }
 
@@ -132,7 +134,8 @@ class WeatherService {
           day.main.temp,
           day.wind.speed,
           day.main.humidity,
-          day.weather[0].icon
+          day.weather[0].icon,
+          day.weather[0].description
         )
       );
     }

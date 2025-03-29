@@ -40,7 +40,22 @@ const deleteCityFromHistory = async (id: string) => {
 };
 
 // Render Functions
-const renderCurrentWeather = ({ city, date, icon, iconDescription, tempF, windSpeed, humidity }: any) => {
+const renderCurrentWeather = (weatherData: any) => {
+  if (!weatherData) {
+    console.error('No weather data provided');
+    return;
+  }
+
+  const {
+    city = 'Unknown City',
+    date = 'Unknown Date',
+    icon = '',
+    iconDescription = 'Weather icon',
+    tempF = 0,
+    windSpeed = 0,
+    humidity = 0
+  } = weatherData;
+
   heading.textContent = `${city} (${date})`;
   weatherIcon.setAttribute('src', `https://openweathermap.org/img/w/${icon}.png`);
   weatherIcon.setAttribute('alt', iconDescription);
@@ -71,7 +86,21 @@ const renderForecast = (forecast: any) => {
   forecast.forEach(renderForecastCard);
 };
 
-const renderForecastCard = ({ date, icon, iconDescription, tempF, windSpeed, humidity }: any) => {
+const renderForecastCard = (weatherData: any) => {
+  if (!weatherData) {
+    console.error('No forecast data provided');
+    return;
+  }
+
+  const {
+    date = 'Unknown Date',
+    icon = '',
+    iconDescription = 'Weather icon',
+    tempF = 0,
+    windSpeed = 0,
+    humidity = 0
+  } = weatherData;
+
   const { col, cardTitle, weatherIcon, tempEl, windEl, humidityEl } = createForecastCard();
 
   cardTitle.textContent = date;
