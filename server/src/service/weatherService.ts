@@ -1,5 +1,6 @@
 import dayjs, { Dayjs } from "dayjs";
 import dotenv from "dotenv";
+import fetch from "node-fetch";
 dotenv.config();
 
 interface Coordinates {
@@ -19,29 +20,61 @@ class Weather {
 }
 
 class WeatherService {
+  private static instance: WeatherService;
   private baseURL: string;
   private apiKey: string;
   private cityName: string;
 
-  constructor() {
+  private constructor() {
     this.baseURL = process.env.API_BASE_URL || "";
     this.apiKey = process.env.API_KEY || "";
     this.cityName = "";
+    
+    if (!this.baseURL || !this.apiKey) {
+      throw new Error("API configuration is missing. Please check your environment variables.");
+    }
+
+    // Log API configuration (without exposing the full API key)
+    console.log('API Configuration:', {
+      baseURL: this.baseURL,
+      apiKeyLength: this.apiKey.length,
+      apiKeyPrefix: this.apiKey.substring(0, 4) + '...'
+    });
+  }
+
+  public static getInstance(): WeatherService {
+    if (!WeatherService.instance) {
+      WeatherService.instance = new WeatherService();
+    }
+    return WeatherService.instance;
   }
 
   private async fetchLocationData(query: string): Promise<Coordinates> {
-    if (!this.baseURL || !this.apiKey) {
-      throw new Error("API key or base URL not found.");
+    try {
+      console.log('Fetching location data from:', query.replace(this.apiKey, 'API_KEY'));
+      const response = await fetch(query);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Geocoding API error response:', errorText);
+        throw new Error(`Geocoding API error: ${response.statusText} (${response.status})`);
+      }
+      
+      const data: Coordinates[] = await response.json();
+      if (!data.length) {
+        throw new Error("Sorry, location not found. Please enter a valid city name.");
+      }
+      return data[0];
+    } catch (error) {
+      console.error('Geocoding API error details:', error);
+      throw new Error(`Failed to fetch location data: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-    const response: Coordinates[] = await fetch(query).then((res) => res.json());
-    if (!response.length) {
-      throw new Error("Sorry, location not found. Please enter a valid city name.");
-    }
-    return response[0];
   }
 
   private buildGeocodeQuery(): string {
-    return `${this.baseURL}/geo/1.0/direct?q=${encodeURIComponent(this.cityName)}&appid=${this.apiKey}`;
+    const query = `${this.baseURL}/geo/1.0/direct?q=${encodeURIComponent(this.cityName)}&appid=${this.apiKey}`;
+    console.log('Built geocode query:', query.replace(this.apiKey, 'API_KEY'));
+    return query;
   }
 
   private buildWeatherQuery(coordinates: Coordinates): string {
@@ -49,12 +82,21 @@ class WeatherService {
   }
 
   private async fetchWeatherData(coordinates: Coordinates): Promise<Weather[]> {
-    const response = await fetch(this.buildWeatherQuery(coordinates)).then((res) => res.json());
-    if (!response.list.length) {
-      throw new Error("Weather data not found");
+    try {
+      const response = await fetch(this.buildWeatherQuery(coordinates));
+      if (!response.ok) {
+        throw new Error(`Weather API error: ${response.statusText}`);
+      }
+      const data = await response.json();
+      if (!data.list?.length) {
+        throw new Error("Weather data not found");
+      }
+      const currentWeather = this.parseCurrentWeather(data.list[0]);
+      return this.buildForecastArray(currentWeather, data.list);
+    } catch (error) {
+      console.error('Weather API error details:', error);
+      throw new Error(`Failed to fetch weather data: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-    const currentWeather = this.parseCurrentWeather(response.list[0]);
-    return this.buildForecastArray(currentWeather, response.list);
   }
 
   private parseCurrentWeather(response: any): Weather {
@@ -87,11 +129,15 @@ class WeatherService {
     return weatherForecast;
   }
 
-  async getWeatherForCity(city: string): Promise<Weather[]> {
-    this.cityName = city;
-    const coordinates = await this.fetchLocationData(this.buildGeocodeQuery());
-    return await this.fetchWeatherData(coordinates);
+  public async getWeatherForCity(city: string): Promise<Weather[]> {
+    try {
+      this.cityName = city;
+      const coordinates = await this.fetchLocationData(this.buildGeocodeQuery());
+      return await this.fetchWeatherData(coordinates);
+    } catch (error) {
+      throw new Error(`Failed to get weather for ${city}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 }
 
-export default new WeatherService();
+export default WeatherService.getInstance();
