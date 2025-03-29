@@ -1,6 +1,5 @@
 import dayjs, { Dayjs } from "dayjs";
 import dotenv from "dotenv";
-
 dotenv.config();
 
 interface Coordinates {
@@ -36,7 +35,7 @@ class WeatherService {
     }
     const response: Coordinates[] = await fetch(query).then((res) => res.json());
     if (!response.length) {
-      throw new Error("Location not found. Please enter a valid city name.");
+      throw new Error("Sorry, location not found. Please enter a valid city name.");
     }
     return response[0];
   }
