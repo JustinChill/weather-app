@@ -15,6 +15,15 @@ router.post("/", async (req: Request, res: Response) => {
     }
 
     const data = await WeatherService.getWeatherForCity(cityName.trim());
+    
+    // Validate the data before sending
+    if (!Array.isArray(data) || data.length === 0) {
+      return res.status(500).json({ 
+        message: "No weather data available for the specified city." 
+      });
+    }
+
+    // Add the city to history after successful weather fetch
     await HistoryService.addCity(cityName.trim());
     
     return res.json(data);

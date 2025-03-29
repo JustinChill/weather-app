@@ -14,14 +14,36 @@ const humidityEl = document.getElementById('humidity') as HTMLParagraphElement;
 
 // API Calls
 const fetchWeather = async (cityName: string) => {
-  const response = await fetch('/api/weather/', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ cityName }),
-  });
-  const weatherData = await response.json();
-  renderCurrentWeather(weatherData[0]);
-  renderForecast(weatherData.slice(1));
+  try {
+    const response = await fetch('/api/weather/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cityName }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to fetch weather data');
+    }
+
+    const weatherData = await response.json();
+    
+    if (!Array.isArray(weatherData) || weatherData.length === 0) {
+      throw new Error('Invalid weather data received');
+    }
+
+    renderCurrentWeather(weatherData[0]);
+    renderForecast(weatherData.slice(1));
+  } catch (error) {
+    console.error('Error fetching weather:', error);
+    // Show error to user
+    if (todayContainer) {
+      todayContainer.innerHTML = `<div class="alert alert-danger">${error instanceof Error ? error.message : 'Failed to fetch weather data'}</div>`;
+    }
+    if (forecastContainer) {
+      forecastContainer.innerHTML = '';
+    }
+  }
 };
 
 const fetchSearchHistory = async () => {
