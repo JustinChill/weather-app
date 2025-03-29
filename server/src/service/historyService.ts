@@ -2,19 +2,20 @@ import fs from 'node:fs/promises';
 import { v4 as uuidv4 } from 'uuid';
 
 class City {
-  constructor(public name: string, public id: string) {}
+  constructor(public name: string, public id: string = uuidv4()) {}
 }
 
 class HistoryService {
   private filePath = 'db/db.json';
 
-  private async readFile(): Promise<string> {
+  private async readFile(): Promise<City[]> {
     try {
-      return await fs.readFile(this.filePath, { encoding: 'utf8' });
+      const data = await fs.readFile(this.filePath, { encoding: 'utf8' });
+      return JSON.parse(data) as City[];
     } catch (error) {
       if (error.code === 'ENOENT') {
-        // File does not exist, return an empty string
-        return '[]';
+        // File does not exist, return an empty array
+        return [];
       }
       throw error;
     }
@@ -25,12 +26,7 @@ class HistoryService {
   }
 
   async getCities(): Promise<City[]> {
-    const data = await this.readFile();
-    try {
-      return JSON.parse(data) as City[];
-    } catch (error) {
-      return [];
-    }
+    return await this.readFile();
   }
 
   async addCity(cityName: string): Promise<City> {
@@ -45,7 +41,7 @@ class HistoryService {
       return existingCity;
     }
 
-    const newCity = new City(cityName, uuidv4());
+    const newCity = new City(cityName);
     const updatedCities = [...cities, newCity];
     await this.writeFile(updatedCities);
 
