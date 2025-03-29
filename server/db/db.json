@@ -1,1 +1,14 @@
-[{"name":"San Diego","id":"9482491e-ea59-404a-81e7-2cc40f946fca"},{"name":"Napa","id":"295f3b66-91dd-4bd8-80e9-c23f4a44167d"}]
+[
+  {
+    "name": "San Diego",
+    "id": "9482491e-ea59-404a-81e7-2cc40f946fca"
+  },
+  {
+    "name": "Napa",
+    "id": "295f3b66-91dd-4bd8-80e9-c23f4a44167d"
+  },
+  {
+    "name": "New York",
+    "id": "f5339ede-4fa2-4aaa-bc02-c39d53ddc29f"
+  }
+]

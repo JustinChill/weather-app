@@ -59,7 +59,7 @@ const renderCurrentWeather = ({ city, date, icon, iconDescription, tempF, windSp
 const renderForecast = (forecast: any) => {
   const headingCol = document.createElement('div');
   const heading = document.createElement('h4');
-  headingCol.setAttribute('class', 'col-12');
+  headingCol.setAttribute('class', 'col-12 items-start text-left');
   heading.textContent = '5-Day Forecast:';
   headingCol.append(heading);
 
