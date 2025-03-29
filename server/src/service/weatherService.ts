@@ -26,19 +26,25 @@ class WeatherService {
   private cityName: string;
 
   private constructor() {
-    this.baseURL = process.env.API_BASE_URL || "";
-    this.apiKey = process.env.API_KEY || "";
-    this.cityName = "";
-    
-    if (!this.baseURL || !this.apiKey) {
+    // Ensure environment variables are loaded
+    if (!process.env.API_BASE_URL || !process.env.API_KEY) {
+      console.error('Missing environment variables:', {
+        hasBaseUrl: !!process.env.API_BASE_URL,
+        hasApiKey: !!process.env.API_KEY
+      });
       throw new Error("API configuration is missing. Please check your environment variables.");
     }
 
+    this.baseURL = process.env.API_BASE_URL;
+    this.apiKey = process.env.API_KEY;
+    this.cityName = "";
+    
     // Log API configuration (without exposing the full API key)
     console.log('API Configuration:', {
       baseURL: this.baseURL,
       apiKeyLength: this.apiKey.length,
-      apiKeyPrefix: this.apiKey.substring(0, 4) + '...'
+      apiKeyPrefix: this.apiKey.substring(0, 4) + '...',
+      environment: process.env.NODE_ENV
     });
   }
 
@@ -56,7 +62,11 @@ class WeatherService {
       
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Geocoding API error response:', errorText);
+        console.error('Geocoding API error response:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorText
+        });
         throw new Error(`Geocoding API error: ${response.statusText} (${response.status})`);
       }
       

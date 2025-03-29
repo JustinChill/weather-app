@@ -21,6 +21,8 @@ class HistoryService {
     // Get the absolute path to the db directory
     const dbDir = path.join(process.cwd(), 'db');
     this.dbPath = path.join(dbDir, 'db.json');
+    
+    console.log('Database path:', this.dbPath);
   }
 
   // Method to ensure db directory and file exist
@@ -35,9 +37,16 @@ class HistoryService {
       } catch {
         // If file doesn't exist, create it with empty array
         await fs.writeFile(this.dbPath, '[]', 'utf8');
+        console.log('Created new database file at:', this.dbPath);
       }
     } catch (error) {
       console.error('Error ensuring db exists:', error);
+      // In serverless environment, we might not be able to write to the filesystem
+      // In this case, we'll just log the error but continue
+      if (process.env.NETLIFY) {
+        console.warn('Running in Netlify environment, database operations may be limited');
+        return;
+      }
       throw new Error('Failed to initialize database');
     }
   }
@@ -53,17 +62,32 @@ class HistoryService {
       return data || '[]'; // Return empty array string if file is empty
     } catch (error) {
       console.error('Error reading database:', error);
+      // In Netlify environment, return empty array
+      if (process.env.NETLIFY) {
+        return '[]';
+      }
       return '[]';
     }
   }
 
   // Method to write the updated cities array to the db.json file
   private async write(cities: City[]) {
-    await this.ensureDbExists();
     try {
+      // In Netlify environment, we might not be able to write to the filesystem
+      if (process.env.NETLIFY) {
+        console.warn('Running in Netlify environment, database operations are disabled');
+        return;
+      }
+      
+      await this.ensureDbExists();
       await fs.writeFile(this.dbPath, JSON.stringify(cities, null, 2));
     } catch (error) {
       console.error('Error writing to database:', error);
+      // In Netlify environment, we'll just log the error but continue
+      if (process.env.NETLIFY) {
+        console.warn('Running in Netlify environment, database operations are disabled');
+        return;
+      }
       throw new Error('Failed to save city history');
     }
   }
@@ -82,26 +106,36 @@ class HistoryService {
 
   // Method to add a city to the db.json file
   async addCity(city: string) {
-    if (!city){
+    if (!city) {
       throw new Error('City cannot be empty');
     }
-    const newCity: City = {name: city, id: uuidv4()}
+    const newCity: City = { name: city, id: uuidv4() };
+    
+    // In Netlify environment, just return the new city without saving
+    if (process.env.NETLIFY) {
+      console.warn('Running in Netlify environment, city history is not being saved');
+      return newCity;
+    }
+
     return await this.getCities()
-    .then((cities) => {
-      if (cities.find((index) => index.name === city)) {
-        return cities;
-      }
-      return [...cities, newCity];
-    })
-    .then((updatedCitites) => this.write(updatedCitites))
-    .then(() => newCity);
+      .then((cities) => {
+        if (cities.find((index) => index.name === city)) {
+          return cities;
+        }
+        return [...cities, newCity];
+      })
+      .then((updatedCitites) => this.write(updatedCitites))
+      .then(() => newCity);
   }
 
-  // BONUS: Method to remove a city from the db.json file by id
-  // async removeCity(id: string){
-  //   return await this.getCities().then((cities) => cities.filter((city) => city.id !== id)).then((filteredCities) => this.write(filteredCities));
-  // }
+  // Method to remove a city from the db.json file by id
   async removeCity(id: string): Promise<boolean> {
+    // In Netlify environment, just return true without saving
+    if (process.env.NETLIFY) {
+      console.warn('Running in Netlify environment, city deletion is not being saved');
+      return true;
+    }
+
     const cities = await this.getCities();
     const filteredCities = cities.filter((city) => city.id !== id);
   
